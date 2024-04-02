@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
-import sys
 import os
-import cg_algorithms as alg
+import sys
+
 import numpy as np
 from PIL import Image
 
+import cg_algorithms as alg
 
 if __name__ == '__main__':
     input_file = sys.argv[1]
@@ -57,4 +58,3 @@ if __name__ == '__main__':
             ...
 
             line = fp.readline()
-

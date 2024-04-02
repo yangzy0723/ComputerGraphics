@@ -2,7 +2,6 @@
 # -*- coding:utf-8 -*-
 
 # 本文件只允许依赖math库
-import math
 
 
 def draw_line(p_list, algorithm):
@@ -26,9 +25,93 @@ def draw_line(p_list, algorithm):
             for x in range(x0, x1 + 1):
                 result.append((x, int(y0 + k * (x - x0))))
     elif algorithm == 'DDA':
-        pass
+        if x0 == x1:
+            if y0 > y1:
+                y0, y1 = y1, y0
+            for y in range(int(y0), int(y1) + 1):
+                result.append([x0, y])
+            return result
+
+        m = abs((y0 - y1) / (x0 - x1))
+        if m < 1:
+            if x0 > x1:
+                x0, x1 = x1, x0
+                y0, y1 = y1, y0
+            delta_y = m
+            if y0 < y1:
+                result.append([x0, y0])
+                y_k = y0
+                for x in range(int(x0) + 1, int(x1) + 1):
+                    y_k += delta_y
+                    result.append([x, round(y_k)])
+            else:
+                result.append([x1, y1])
+                y_k = y1
+                for x in range(int(x1) - 1, int(x0) - 1, -1):
+                    y_k += delta_y
+                    result.append([x, round(y_k)])
+        else:
+            if y0 > y1:
+                x0, x1 = x1, x0
+                y0, y1 = y1, y0
+            delta_x = 1 / m
+            if x0 < x1:
+                result.append([x0, y0])
+                x_k = x0
+                for y in range(int(y0) + 1, int(y1) + 1):
+                    x_k += delta_x
+                    result.append([round(x_k), y])
+            else:
+                result.append([x1, y1])
+                x_k = x1
+                for y in range(int(y1) - 1, int(y0) - 1, -1):
+                    x_k += delta_x
+                    result.append([round(x_k), y])
     elif algorithm == 'Bresenham':
-        pass
+        if x0 == x1:
+            if y0 > y1:
+                y0, y1 = y1, y0
+            for y in range(int(y0), int(y1) + 1):
+                result.append([x0, y])
+            return result
+
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        if dy / dx < 1:
+            if x0 > x1:
+                x0, x1 = x1, x0
+                y0, y1 = y1, y0
+            flag = 0
+            if y0 > y1:
+                flag = 1
+            result.append([x0, y0])
+            p_k = 2 * dy - dx
+            y_k = y0
+            for x in range(int(x0) + 1, int(x1) + 1):
+                if p_k >= 0:
+                    p_k += 2 * dy - 2 * dx
+                    y_k += (1 if flag == 0 else -1)
+                else:
+                    p_k += 2 * dy
+                result.append([x, y_k])
+        else:
+            dy, dx = dx, dy
+            if y0 > y1:
+                x0, x1 = x1, x0
+                y0, y1 = y1, y0
+            flag = 0
+            if x0 > x1:
+                flag = 1
+            result.append([x0, y0])
+            p_k = 2 * dy - dx
+            x_k = x0
+            for y in range(int(y0) + 1, int(y1) + 1):
+                if p_k >= 0:
+                    p_k += 2 * dy - 2 * dx
+                    x_k += (1 if flag == 0 else -1)
+                else:
+                    p_k += 2 * dy
+                result.append([x_k, y])
     return result
 
 
@@ -52,7 +135,49 @@ def draw_ellipse(p_list):
     :param p_list: (list of list of int: [[x0, y0], [x1, y1]]) 椭圆的矩形包围框左上角和右下角顶点坐标
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
-    pass
+    result = []
+    x0, y0 = p_list[0]
+    x1, y1 = p_list[1]
+    core_x = int((x0 + x1) / 2)
+    core_y = int((y0 + y1) / 2)
+    a = int(abs(x0 - x1) / 2)
+    b = int(abs(y0 - y1) / 2)
+    a_2 = a ** 2
+    b_2 = b ** 2
+    x_k = 0
+    y_k = b
+    result.append([core_x, core_y + b])
+    result.append([core_x, core_y - b])
+    result.append([core_x + a, core_y])
+    result.append([core_x - a, core_y])
+
+    p_k = b_2 - a_2 * b + a_2 / 4
+    while b_2 * x_k < a_2 * y_k:
+        if p_k < 0:
+            p_k += 2 * b_2 * x_k + 3 * b_2
+        else:
+            p_k += 2 * b_2 * x_k - 2 * a_2 * y_k + 2 * a_2 + 3 * b_2
+            y_k -= 1
+        x_k += 1
+        result.append((core_x + x_k, core_y + y_k))
+        result.append((core_x - x_k, core_y + y_k))
+        result.append((core_x + x_k, core_y - y_k))
+        result.append((core_x - x_k, core_y - y_k))
+
+    p_k = b_2 * (x_k + 1 / 2) ** 2 + a_2 * (y_k - 1) ** 2 - a_2 * b_2
+    while y_k > 0:
+        if p_k > 0:
+            p_k += -2 * a_2 * y_k + 3 * a_2
+        else:
+            p_k += 2 * b_2 * x_k - 2 * a_2 * y_k + 2 * b_2 + 3 * a_2
+            x_k += 1
+        y_k -= 1
+        result.append((core_x + x_k, core_y + y_k))
+        result.append((core_x - x_k, core_y + y_k))
+        result.append((core_x + x_k, core_y - y_k))
+        result.append((core_x - x_k, core_y - y_k))
+
+    return result
 
 
 def draw_curve(p_list, algorithm):
