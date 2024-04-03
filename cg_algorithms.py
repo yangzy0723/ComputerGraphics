@@ -156,7 +156,7 @@ def draw_ellipse(p_list):
         if p_k < 0:
             p_k += 2 * b_2 * x_k + 3 * b_2
         else:
-            p_k += 2 * b_2 * x_k - 2 * a_2 * y_k + 2 * a_2 + 3 * b_2
+            p_k += 2 * b_2 * x_k + 3 * b_2 - 2 * a_2 * y_k + 2 * a_2
             y_k -= 1
         x_k += 1
         result.append((core_x + x_k, core_y + y_k))
@@ -169,7 +169,7 @@ def draw_ellipse(p_list):
         if p_k > 0:
             p_k += -2 * a_2 * y_k + 3 * a_2
         else:
-            p_k += 2 * b_2 * x_k - 2 * a_2 * y_k + 2 * b_2 + 3 * a_2
+            p_k += 2 * b_2 * x_k + 3 * a_2 - 2 * a_2 * y_k + 2 * b_2
             x_k += 1
         y_k -= 1
         result.append((core_x + x_k, core_y + y_k))
@@ -198,7 +198,10 @@ def translate(p_list, dx, dy):
     :param dy: (int) 垂直方向平移量
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    result = []
+    for p in p_list:
+        result.append([p[0] + dx, p[1] + dy])
+    return result
 
 
 def rotate(p_list, x, y, r):
