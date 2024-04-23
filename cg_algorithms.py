@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+import math
+
 
 # 本文件只允许依赖math库
 
@@ -204,16 +206,30 @@ def translate(p_list, dx, dy):
     return result
 
 
-def rotate(p_list, x, y, r):
+def rotate(p_list, x, y, r, unit=True):
     """旋转变换（除椭圆外）
 
     :param p_list: (list of list of int: [[x0, y0], [x1, y1], [x2, y2], ...]) 图元参数
     :param x: (int) 旋转中心x坐标
     :param y: (int) 旋转中心y坐标
     :param r: (int) 顺时针旋转角度（°）
+    :param unit: (bool) 角度单位
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    result = []
+    if unit:
+        for p in p_list:
+            x0, y0 = p[0] - x, p[1] - y
+            x_new = x0 * math.cos(r / 180 * math.pi) - y0 * math.sin(r / 180 * math.pi)
+            y_new = x0 * math.sin(r / 180 * math.pi) + y0 * math.cos(r / 180 * math.pi)
+            result.append([round(x_new) + x, round(y_new) + y])
+    else:
+        for p in p_list:
+            x0, y0 = p[0] - x, p[1] - y
+            x_new = x0 * math.cos(r) - y0 * math.sin(r)
+            y_new = x0 * math.sin(r) + y0 * math.cos(r)
+            result.append([round(x_new) + x, round(y_new) + y])
+    return result
 
 
 def scale(p_list, x, y, s):
@@ -225,7 +241,7 @@ def scale(p_list, x, y, s):
     :param s: (float) 缩放倍数
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    return [[round((res[0] - x) * s) + x, round((res[1] - y) * s) + y] for res in p_list]
 
 
 def clip(p_list, x_min, y_min, x_max, y_max, algorithm):

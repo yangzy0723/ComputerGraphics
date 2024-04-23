@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-
+import math
 import sys
 from typing import Optional
 
 from PyQt5.QtCore import QRectF
-from PyQt5.QtGui import QPainter, QMouseEvent, QColor
+from PyQt5.QtGui import QPainter, QMouseEvent, QColor, QPixmap
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
     QListWidget,
     QHBoxLayout,
     QWidget,
-    QStyleOptionGraphicsItem, QColorDialog, QDialog, QLineEdit, QInputDialog, QMessageBox)
+    QStyleOptionGraphicsItem, QColorDialog, QDialog, QLineEdit, QInputDialog, QMessageBox, QFileDialog)
 
 import cg_algorithms as alg
 
@@ -43,6 +43,7 @@ class MyCanvas(QGraphicsView):
 
         self.origin_pos = None
         self.origin_p_list = None
+        self.trans_center = None
 
     def init(self):
         self.scene().clear()
@@ -58,6 +59,7 @@ class MyCanvas(QGraphicsView):
 
         self.origin_pos = None
         self.origin_p_list = None
+        self.trans_center = None
 
     def start_draw_line(self, algorithm):
         self.status = 'line'
@@ -72,6 +74,12 @@ class MyCanvas(QGraphicsView):
 
     def start_translate(self):
         self.status = 'translate'
+
+    def start_rotate(self):
+        self.status = 'rotate'
+
+    def start_scale(self):
+        self.status = 'scale'
 
     def finish_draw(self):
         self.temp_item = None
@@ -123,6 +131,24 @@ class MyCanvas(QGraphicsView):
                 self.temp_item = self.item_dict[self.selected_id]
                 self.origin_pos = pos
                 self.origin_p_list = self.temp_item.p_list
+        elif self.status == 'rotate':
+            if self.selected_id != '':
+                self.main_window.is_modified = True
+                self.temp_item = self.item_dict[self.selected_id]
+                self.origin_p_list = self.temp_item.p_list
+                if self.trans_center is None:
+                    self.trans_center = pos
+                else:
+                    self.origin_pos = pos
+        elif self.status == 'scale':
+            if self.selected_id != '':
+                self.main_window.is_modified = True
+                self.temp_item = self.item_dict[self.selected_id]
+                self.origin_p_list = self.temp_item.p_list
+                if self.trans_center is None:
+                    self.trans_center = pos
+                else:
+                    self.origin_pos = pos
         self.updateScene([self.sceneRect()])
         super().mousePressEvent(event)
 
@@ -141,6 +167,36 @@ class MyCanvas(QGraphicsView):
                 dx = x - int(self.origin_pos.x())
                 dy = y - int(self.origin_pos.y())
                 self.temp_item.p_list = alg.translate(self.origin_p_list, dx, dy)
+        elif self.status == 'rotate':
+            if self.selected_id != '' and self.trans_center is not None and self.origin_pos is not None:
+                x_origin, y_origin = int(self.origin_pos.x() - self.trans_center.x()), int(
+                    self.origin_pos.y() - self.trans_center.y())
+                len_origin = math.sqrt(x_origin ** 2 + y_origin ** 2)
+                x_now, y_now = x - int(self.trans_center.x()), y - int(self.trans_center.y())
+                len_now = math.sqrt(x_now ** 2 + y_now ** 2)
+                if len_origin != 0 and len_now != 0:
+                    sin_origin = y_origin / len_origin
+                    cos_origin = x_origin / len_origin
+                    sin_now = y_now / len_now
+                    cos_now = x_now / len_now
+                    delta_sin = sin_now * cos_origin - cos_now * sin_origin
+                    delta_cos = cos_now * cos_origin + sin_now * sin_origin
+                    if delta_cos >= 0:
+                        r = math.asin(delta_sin)
+                    else:
+                        r = math.pi - math.asin(delta_sin)
+                    self.temp_item.p_list = alg.rotate(self.origin_p_list, int(self.trans_center.x()),
+                                                       int(self.trans_center.y()), r, False)
+        elif self.status == 'scale':
+            if self.selected_id != '' and self.trans_center is not None and self.origin_pos is not None:
+                x_last, y_last = int(self.origin_pos.x() - self.trans_center.x()), int(
+                    self.origin_pos.y() - self.trans_center.y())
+                len_last = math.sqrt(x_last ** 2 + y_last ** 2)
+                if len_last != 0:
+                    x_now, y_now = x - int(self.trans_center.x()), y - int(self.trans_center.y())
+                    len_now = math.sqrt(x_now ** 2 + y_now ** 2)
+                    self.temp_item.p_list = alg.scale(self.origin_p_list, int(self.trans_center.x()),
+                                                      int(self.trans_center.y()), len_now / len_last)
         self.updateScene([self.sceneRect()])
         super().mouseMoveEvent(event)
 
@@ -168,6 +224,16 @@ class MyCanvas(QGraphicsView):
         elif self.status == 'translate':
             self.origin_pos = None
             self.origin_p_list = None
+        elif self.status == 'rotate':
+            if self.origin_pos is not None:
+                self.origin_pos = None
+                self.origin_p_list = None
+                self.trans_center = None
+        elif self.status == 'scale':
+            if self.origin_pos is not None:
+                self.origin_pos = None
+                self.origin_p_list = None
+                self.trans_center = None
         super().mouseReleaseEvent(event)
 
 
@@ -282,6 +348,7 @@ class MainWindow(QMainWindow):
         file_menu = menubar.addMenu('文件')
         set_pen_act = file_menu.addAction('设置画笔')
         reset_canvas_act = file_menu.addAction('重置画布')
+        save_canvas_act = file_menu.addAction('保存画布')
         exit_act = file_menu.addAction('退出')
         draw_menu = menubar.addMenu('绘制')
         line_menu = draw_menu.addMenu('线段')
@@ -306,6 +373,7 @@ class MainWindow(QMainWindow):
         # 连接信号和槽函数
         set_pen_act.triggered.connect(self.set_pen_action)
         reset_canvas_act.triggered.connect(self.reset_canvas_action)
+        save_canvas_act.triggered.connect(self.save_canvas_action)
         exit_act.triggered.connect(qApp.quit)
 
         line_naive_act.triggered.connect(self.line_naive_action)
@@ -318,6 +386,8 @@ class MainWindow(QMainWindow):
         ellipse_act.triggered.connect(self.ellipse_action)
 
         translate_act.triggered.connect(self.translate_action)
+        rotate_act.triggered.connect(self.rotate_action)
+        scale_act.triggered.connect(self.scale_action)
 
         self.list_widget.currentTextChanged.connect(self.canvas_widget.selection_changed)
 
@@ -374,6 +444,22 @@ class MainWindow(QMainWindow):
 
         self.statusBar().showMessage('空闲')
 
+    def save_canvas_action(self):
+        self.statusBar().showMessage('保存画布')
+        canvas = self.canvas_widget
+
+        dialog = QFileDialog()
+        filename = dialog.getSaveFileName(filter="Image Files(*.jpg *.png *.bmp)")
+        if filename[0]:
+            pix = QPixmap(self.width(), self.height())
+            pix.fill(QColor(255, 255, 255))
+            painter = QPainter()
+            painter.begin(pix)
+            for item in canvas.item_dict:
+                canvas.item_dict[item].paint(painter, QStyleOptionGraphicsItem)
+            painter.end()
+            pix.save(filename[0])
+
     def line_naive_action(self):
         self.canvas_widget.start_draw_line('Naive')
         self.statusBar().showMessage('Naive算法绘制线段')
@@ -406,13 +492,21 @@ class MainWindow(QMainWindow):
 
     def ellipse_action(self):
         self.canvas_widget.start_draw_ellipse()
-        self.statusBar().showMessage('椭圆')
+        self.statusBar().showMessage('绘制椭圆')
         self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
 
     def translate_action(self):
         self.canvas_widget.start_translate()
         self.statusBar().showMessage('平移')
+
+    def rotate_action(self):
+        self.canvas_widget.start_rotate()
+        self.statusBar().showMessage('旋转')
+
+    def scale_action(self):
+        self.canvas_widget.start_scale()
+        self.statusBar().showMessage('缩放')
 
 
 if __name__ == '__main__':

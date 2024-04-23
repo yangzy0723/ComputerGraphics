@@ -12,7 +12,8 @@
 \newtheorem*{prove}{Proof}
 \usepackage{multirow}
 \usepackage{url}
-\usepackage[colorlinks,urlcolor=blue]{hyperref}
+% 设置linkcolor为黑色，urlcolor为蓝色
+\usepackage[colorlinks,linkcolor=black,urlcolor=blue]{hyperref}
 \usepackage{enumerate}
 \renewcommand\refname{参考文献}
 
@@ -21,29 +22,24 @@
 
 %--
 \begin{document}
-\title{\textbf{《计算机图形学》3月报告}}
+\title{\textbf{《计算机图形学》4月报告}}
 \author{211240045，杨镇源，\href{mailto:211240045@smail.nju.edu.cn}{211240045@smail.nju.edu.cn}}
 \maketitle
-
+\tableofcontents 
+\newpage
 \section{综述}
 
 \subsection{2024年3月}
 
-\subsubsection{cg\_algorithms.py}
-
 $\bullet$ 完成绘制直线（DDA算法）
 
 $\bullet$ 完成绘制直线（Bresenham算法）
-
-\subsubsection{cg\_gui.py}
 
 $\bullet$ 实现gui重置画布
 
 $\bullet$ 实现gui保存画布
 
 \subsection{2024年4月}
-
-\subsubsection{cg\_algorithms.py}
 
 $\bullet$ 完成绘制多边形（DDA算法）
 
@@ -53,11 +49,13 @@ $\bullet$ 完成绘制椭圆（中点圆生成算法）
 
 $\bullet$ 完成图元平移
 
-\subsubsection{cg\_gui.py}
+$\bullet$ 完成图元旋转
+
+$\bullet$ 完成图元缩放
 
 $\bullet$ 实现gui设置画笔颜色
 
-\section{算法介绍}
+\section{图元绘制算法介绍}
 
 \subsection{绘制直线}
 
@@ -91,13 +89,131 @@ Bresenham算法通过整数计算来绘制线条，避免了DDA算法中的精�
 
 \textbf{算法原理：}算法类似于Bresenham算法，不失一般性，考虑中心在原点处的椭圆，研究第一象限。将第一象限中椭圆切线绝对值等于1所对应的切点记作临界点$P$，$P$上方的点$\frac{dy}{dx}<1$，$P$下方的点$\frac{dy}{dx}>1$，由此可利用Bresenham算法解决选点问题。根据参数方程定义椭圆函数为：
 $$f_{ellipse}(x,y)=b^2x^2+a^2y^2-a^2b^2$$
-在$P$上方的点，取$x$方向单位步长，再通过决策函数判断真实值与两候选像素之间哪个位置
-更近，更新对应的$y$值；在$P$下方的点，取$y$方向单位步长，再通过决策函数判断真实值与两候选像素之间哪个位置
-更近，更新对应的$x$值。又因为椭圆四个象限是互相对称的，可以通过改变对应的符
-号补全其余象限，最后结合中心点的实际坐标即可计算出待绘制椭圆的点坐标。
-\section{系统介绍}
+在$P$上方的点，取$x$方向单位步长，再通过决策函数判断真实值与两候选像素之间哪个位置更近，更新对应的$y$值；在$P$下方的点，取$y$方向单位步长，再通过决策函数判断真实值与两候选像素之间哪个位置更近，更新对应的$x$值。又因为椭圆四个象限是互相对称的，可以通过改变对应的符号补全其余象限，最后结合中心点的实际坐标即可计算出待绘制椭圆的点坐标。
+
+\subsection{绘制曲线}
+
+\subsubsection{Bezier算法}
+
+\textbf{算法原理：}Bezier算法是由多边形控制，逼近多边形的一种曲线。其做法是通过Bezier基函数来得到绘制点的坐标。Bezier基函数的原型比较复杂，但我了解到Bezier曲线基函数已被证明可简化为伯恩斯坦基函数，其形式为：
+
+$$C_n^it^i(1-t)^i$$
+
+有了基函数，自然可以用参数$t$，取某一个步长，来近似绘制曲线。下面以4个点控制的曲线为例，介绍算法执行步骤，其中算法接受参数中的顶点序列应当是有序的：
+
+\noindent 1. 对两两相邻点求中点，得到三个中点
+
+\noindent 2. 对得到的三个中点再次求中点，得到两个中点
+
+\noindent 3. 对得到的两个中点再次求中点，得到一个中点
+
+\noindent 4. 将得到的最接近曲线的7个点根据最后计算得到的中点对半分为每方4个，即：$P_0^0,P_0^1,P_0^2,P_0^3$和$P_0^3,P_1^2,P_2^1,P_3^0$ 
+
+\noindent 5. 分别对这两组4个点调用上述算法，递归直到误差在可接受范围内
+
+\subsubsection{B-spline算法}
+
+\textbf{算法原理：}由于Bezier曲线调整的时候有“牵一发而动全身”的缺点，因此引入B-spline（B样条）曲线。B样条曲线同样拥有自己的基函数，这些基函数在定义曲线时起到关键作用。与贝塞尔曲线不同，B样条曲线的基函数具有局部影响的特点，即当调整曲线上的一个控制点时，只有曲线的一小部分会受到影响，而不是整个曲线。这种局部影响的特性是通过基函数的支撑区间(support interval)概念来实现的。
+
+支撑区间指的是基函数值非零的区间。对于三次贝塞尔曲线，其四个基函数的支撑区间都是整个定义域[0,1]，这意味着任何一个控制点的调整都会对曲线的整体形状产生影响。而B样条曲线的基函数则具有更短的支撑区间，这允许控制点的局部调整，从而提高了曲线的可控性和灵活性。
+
+B样条曲线的基函数产生使用递推形式，即de-BoorCox递推定义：
+
+\begin{center}
+	$
+	\begin{cases}  
+		N_{i,1}(u)=\begin{cases}
+			1,	& u_i < u < u_{i+1}	\\
+			0, 	& o.t.
+		\end{cases} \\
+		N_{i,k}(u)=\frac{u-u_i}{u_{i+k-1}-u_i}N_{i,k-1}(u)+\frac{u_{i+k}-u}{u_{i+k}-u_{i-1}}N_{i+1,k-1}(u)
+	\end{cases} 
+	$	\\
+	\textbf{规定$\frac{0}{0}=0$}
+\end{center}
+
+其中$k$是阶数，$u$是参数
+
+均匀B样条基函数是指当节点向量按照等间隔排列，即节点向量为$0,1,2,...,n+k$时，其中$n$是控制点的数量，而$k$是基函数的阶。这种均匀分布的节点向量保证了B样条曲线的基函数在整个定义域内具有相同的支撑区间，从而使得曲线在各个部分的局部控制能力相同。相对地，准均匀B样条基函数则是指节点向量的前$k$个和后$k$个元素相等，而中间的元素则均匀分布。这种分布方式允许基函数在曲线的某些部分具有更大的控制力，而在其他部分则相对较小。
+
+针对实验要求使用均匀B样条函数的情况，为了优化性能，我们可以选择一个简化的节点向量，即仅包含从$0$到$n+k$的连续整数序列。在实际的编程实现中，代码可以按照如下形式编写：
+
+\begin{center}
+	\includegraphics[width=6in]{figs/algorithm1.png}
+\end{center}
+
+\subsubsection{方法对比}
+
+\begin{itemize}
+	\item \textbf{控制点影响范围}：
+	\begin{itemize}
+		\item 贝塞尔曲线：任一控制点的移动都会影响整条曲线。
+		\item B样条曲线：控制点主要影响曲线的局部区域。
+	\end{itemize}
+	
+	\item \textbf{曲线表达式}：
+	\begin{itemize}
+		\item 贝塞尔曲线：$\vec{P}(t) = \sum_{i=0}^{n-1} \vec{p}_i B_{i,n}(t)$.
+		\item B样条曲线：$\vec{P}(t) = \sum_{i=0}^{n-1} \vec{p}_i B_{i,d}(t)$.
+	\end{itemize}
+	
+	\item \textbf{参数 $t$ 的取值范围}：
+	\begin{itemize}
+		\item 贝塞尔曲线：$t$ 的取值通常为 $[0, 1]$.
+		\item B样条曲线：$t$ 的取值范围更广，由节点向量定义。
+	\end{itemize}
+	
+	\item \textbf{局部性与连续性}：
+	\begin{itemize}
+		\item 贝塞尔曲线：不具备局部性，但连续性容易满足。
+		\item B样条曲线：具有局部性，可以构造出高阶连续的曲线。
+	\end{itemize}
+	
+	\item \textbf{几何属性}：
+	\begin{itemize}
+		\item 贝塞尔曲线：几何属性简单，易于理解。
+		\item B样条曲线：具有变差缩减性、凸包性、仿射不变性等复杂几何属性。
+	\end{itemize}
+	
+	\item \textbf{应用场景}：
+	\begin{itemize}
+		\item 贝塞尔曲线：适用于简单图形设计，如字体设计。
+		\item B样条曲线：适用于复杂曲面建模，如CAD/CAM系统。
+	\end{itemize}
+	
+	\item \textbf{计算复杂度}：
+	\begin{itemize}
+		\item 贝塞尔曲线：计算简单，适合实时应用。
+		\item B样条曲线：计算复杂，提供更高的设计灵活性。
+	\end{itemize}
+	
+	\item \textbf{节点向量 (Knot Vector)}：
+	\begin{itemize}
+		\item 贝塞尔曲线：不使用节点向量。
+		\item B样条曲线：使用节点向量来定义曲线的局部控制范围。
+	\end{itemize}
+\end{itemize}
+
+\section{图元变换算法介绍}
 
 \subsection{图元平移}
+
+\subsubsection{算法原理}
+
+不妨设$dx$为水平方向平移量，$dy$为垂直方向平移量。
+
+$x,y$为原始坐标，$x',y'$为平移后坐标，则：
+
+\begin{center}
+$
+	\begin{cases}  
+		x'=x+dx\\
+		y'=y+dy    
+	\end{cases} 
+$
+\end{center}
+
+\subsubsection{算法实现}
 
 需要实现或改动的函数有：
 
@@ -111,7 +227,75 @@ $\bullet$ mouseReleaseEvent函数
 
 $\bullet$ MainWindow类中连接槽函数，实现translate\_action函数
 
-在start\_translate函数将当前系统状态调整为translate；在mousePressEvent函数中确定平移对象并记录初始位置；在mouseMoveEvent函数中随着鼠标指针移动，调用alg.translate函数更新平移对象的点集坐标，然后刷新界面。由此，即可完成平移功能。
+在start\_translate函数将当前系统状态调整为translate；在mousePressEvent函数中确定平移对象并记录初始位置；在mouseMoveEvent函数中随着鼠标指针移动，调用alg.translate函数更新平移对象的点集坐标，然后刷新界面。由此，即可实现平移功能。
+
+\subsection{图元旋转}
+
+\subsubsection{算法原理}
+
+不妨设$x_r,y_r$为旋转中心点坐标，$\theta$为旋转角度。
+
+$x,y$为原始坐标，$x',y'$为旋转后坐标，则：
+
+\begin{center}
+	$
+	\begin{cases}  
+		x'=x_r+(x-x_r)\cos\theta - (y-y_r)\sin\theta \\
+		y'=y_r+(x-x_r)\sin\theta + (y-y_r)\cos\theta 
+	\end{cases} 
+	$
+\end{center}
+
+\subsubsection{算法实现}
+
+需要实现或改动的函数有：
+
+$\bullet$ start\_rotate函数
+
+$\bullet$ mousePressEvent函数
+
+$\bullet$ mouseMoveEvent函数
+
+$\bullet$ mouseReleaseEvent函数
+
+$\bullet$ MainWindow类中连接槽函数，实现rotate\_action函数
+
+在start\_rotate函数将当前系统状态调整为rotate；在mousePressEvent函数中第一次点击确定旋转中心，第二次点击确定旋转起始位置；在mouseMoveEvent函数中随着鼠标指针移动，计算顺时针旋转角度参数r，调用alg.rotate函数更新旋转对象的点集坐标，然后刷新界面。由此，即可实现旋转功能。
+
+\subsection{图元缩放}
+
+\subsubsection{算法原理}
+
+不妨设$x_f,y_f$为缩放中心点坐标，$s$为缩放倍数。
+
+$x,y$为原始坐标，$x',y'$为缩放后坐标，则：
+
+\begin{center}
+	$
+	\begin{cases}  
+		x'=x\cdot s + x_f\cdot (1-s) \\
+		y'=y\cdot s + y_f\cdot (1-s) 
+	\end{cases} 
+	$
+\end{center}
+
+\subsubsection{算法实现}
+
+需要实现或改动的函数有：
+
+$\bullet$ start\_scale函数
+
+$\bullet$ mousePressEvent函数
+
+$\bullet$ mouseMoveEvent函数
+
+$\bullet$ mouseReleaseEvent函数
+
+$\bullet$ MainWindow类中连接槽函数，实现scale\_action函数
+
+在start\_scale函数将当前系统状态调整为scale；在mousePressEvent函数中第一次点击确定缩放中心，第二次点击确定缩放起始位置；在mouseMoveEvent函数中随着鼠标指针移动，计算缩放倍率参数s，调用alg.scale函数更新缩放对象的点集坐标，然后刷新界面。由此，即可实现缩放功能。
+
+\section{用户交互功能介绍}
 
 \subsection{gui重置画布}
 
@@ -125,6 +309,21 @@ $\bullet$ 将画布的宽和高设置为Dialog中得到的宽和高
 
 \subsection{gui保存画布}
 
+添加save\_canvas\_act信号，实现save\_canvas\_action槽函数，并将其连接即可：
+
+$\bullet$ 通过QFileDialog创建一个文件对话框对象，用于选择保存文件的路径和设置文件名
+
+$\bullet$ 通过getSaveFileName获取并记录设置的文件名，并且限定文件类型为jpg、png和bmp格式
+
+$\bullet$ 使用Pixmap对象，存储绘制的图像内容
+
+\subsubsection{实现效果}
+
+\begin{center}
+	\includegraphics[width=6in]{figs/save.png}
+	\includegraphics[width=6in]{figs/save_res.png}
+\end{center}
+
 \subsection{gui设置画笔颜色}
 
 1. 首先实现set\_pen\_action函数：
@@ -137,7 +336,7 @@ $\bullet$将颜色值存入画布的temp\_color成员中
 
 3. 调用painter.drawPoint函数画图前，使用setPen函数设置画笔颜色，保证图形颜色符合预期
 
-效果如下图：
+\subsubsection{实现效果}
 
 \begin{center}
 	\includegraphics[width=6in]{figs/color1.png}
