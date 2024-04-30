@@ -189,7 +189,59 @@ def draw_curve(p_list, algorithm):
     :param algorithm: (string) 绘制使用的算法，包括'Bezier'和'B-spline'（三次均匀B样条曲线，曲线不必经过首末控制点）
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
-    pass
+    result = []
+    if algorithm == 'Bezier':
+        result = bezier_curve(p_list)
+    elif algorithm == 'B-spline':
+        result = bspline_curve(p_list)
+    return result
+
+
+def bezier_curve(p_list):
+    result = []
+    n = len(p_list) - 1
+    result.append(p_list[0])
+    u = 0.001
+    while u < 1:
+        res = p_list.copy()
+        for i in range(n):
+            temp = []
+            for j in range(len(res) - 1):
+                x1, y1 = res[j]
+                x2, y2 = res[j + 1]
+                temp.append([(1 - u) * x1 + u * x2, (1 - u) * y1 + u * y2])
+            res = temp.copy()
+        x, y = round(res[0][0]), round(res[0][1])
+        result.append([x, y])
+        u += 0.001
+    result.append(p_list[-1])
+    return result
+
+
+def bspline_curve(p_list):
+    result = []
+    n = len(p_list)
+    if n < 4:
+        return result
+    k = 4
+    u = 3
+    du = 1 / 1000
+    while u < n:
+        x1, y1 = 0, 0
+        for i in range(n):
+            x0, y0 = p_list[i]
+            res = de_boor_cox(i, k, u)
+            x1 += x0 * res
+            y1 += y0 * res
+        result.append([round(x1), round(y1)])
+        u += du
+    return result
+
+
+def de_boor_cox(i, k, u):
+    if k == 1:
+        return 1 if i <= u < i + 1 else 0
+    return (u - i) / (k - 1) * de_boor_cox(i, k - 1, u) + (i + k - u) / (k - 1) * de_boor_cox(i + 1, k - 1, u)
 
 
 def translate(p_list, dx, dy):
