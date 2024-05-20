@@ -307,4 +307,58 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :param algorithm: (string) 使用的裁剪算法，包括'Cohen-Sutherland'和'Liang-Barsky'
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
-    pass
+    result = []
+    if x_min == x_max or y_min == y_max:
+        return [[0, 0], [0, 0]]
+    if x_min > x_max:
+        x_min, x_max = x_max, x_min
+    if y_min > y_max:
+        y_min, y_max = y_max, y_min
+    x0, y0 = p_list[0]
+    x1, y1 = p_list[1]
+    if algorithm == 'Cohen-Sutherland':
+        while True:
+            code0 = sum([1 * (x0 < x_min), 2 * (x0 > x_max), 4 * (y0 < y_min), 8 * (y0 > y_max)])
+            code1 = sum([1 * (x1 < x_min), 2 * (x1 > x_max), 4 * (y1 < y_min), 8 * (y1 > y_max)])
+            if (code0 | code1) == 0:
+                result = [[x0, y0], [x1, y1]]
+                break
+            elif (code0 & code1) != 0:
+                result.extend([[0, 0], [0, 0]])
+                break
+            else:
+                if code0 == 0:
+                    x0, x1 = x1, x0
+                    y0, y1 = y1, y0
+                    code0, code1 = code1, code0
+                if code0 & 1:
+                    y0 = round(y0 + ((x_min - x0) * (y0 - y1) / (x0 - x1)))
+                    x0 = x_min
+                if code0 & 2:
+                    y0 = round(y0 + ((x_max - x0) * (y0 - y1) / (x0 - x1)))
+                    x0 = x_max
+                if code0 & 4:
+                    x0 = round(x0 + ((y_min - y0) * (x0 - x1) / (y0 - y1)))
+                    y0 = y_min
+                if code0 & 8:
+                    x0 = round(x0 + ((y_max - y0) * (x0 - x1) / (y0 - y1)))
+                    y0 = y_max
+    elif algorithm == 'Liang-Barsky':
+        p = [x0 - x1, x1 - x0, y0 - y1, y1 - y0]
+        q = [x0 - x_min, x_max - x0, y0 - y_min, y_max - y0]
+        u0, u1 = 0, 1
+        for i in range(4):
+            if p[i] < 0:
+                u0 = max(u0, q[i] / p[i])
+            elif p[i] > 0:
+                u1 = min(u1, q[i] / p[i])
+            elif p[i] == 0 and q[i] < 0:
+                return [[0, 0], [0, 0]]
+        if u0 > u1:
+            return [[0, 0], [0, 0]]
+        res_x0 = round(x0 + u0 * (x1 - x0))
+        res_y0 = round(y0 + u0 * (y1 - y0))
+        res_x1 = round(x0 + u1 * (x1 - x0))
+        res_y1 = round(y0 + u1 * (y1 - y0))
+        result = [[res_x0, res_y0], [res_x1, res_y1]]
+    return result

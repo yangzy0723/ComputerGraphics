@@ -88,6 +88,10 @@ class MyCanvas(QGraphicsView):
     def start_scale(self):
         self.status = 'scale'
 
+    def start_clip(self, algorithm):
+        self.status = 'clip'
+        self.temp_algorithm = algorithm
+
     def finish_draw(self):
         self.temp_item = None
 
@@ -144,8 +148,8 @@ class MyCanvas(QGraphicsView):
             if self.selected_id != '':
                 self.main_window.is_modified = True
                 self.temp_item = self.item_dict[self.selected_id]
-                self.origin_pos = pos
                 self.origin_p_list = self.temp_item.p_list
+                self.origin_pos = pos
         elif self.status == 'rotate':
             if self.selected_id != '':
                 self.main_window.is_modified = True
@@ -164,6 +168,12 @@ class MyCanvas(QGraphicsView):
                     self.trans_center = pos
                 else:
                     self.origin_pos = pos
+        elif self.status == 'clip':
+            if self.selected_id != '':
+                self.main_window.is_modified = True
+                self.temp_item = self.item_dict[self.selected_id]
+                self.origin_p_list = self.temp_item.p_list
+                self.origin_pos = pos
         self.updateScene([self.sceneRect()])
         super().mousePressEvent(event)
 
@@ -214,6 +224,10 @@ class MyCanvas(QGraphicsView):
                     len_now = math.sqrt(x_now ** 2 + y_now ** 2)
                     self.temp_item.p_list = alg.scale(self.origin_p_list, int(self.trans_center.x()),
                                                       int(self.trans_center.y()), len_now / len_last)
+        elif self.status == 'clip':
+            if self.selected_id != '':
+                self.temp_item.p_list = alg.clip(self.origin_p_list, self.origin_pos.x(), self.origin_pos.y(), x, y,
+                                                 self.temp_algorithm)
         self.updateScene([self.sceneRect()])
         super().mouseMoveEvent(event)
 
@@ -261,6 +275,9 @@ class MyCanvas(QGraphicsView):
                 self.origin_pos = None
                 self.origin_p_list = None
                 self.trans_center = None
+        elif self.status == 'clip':
+            self.origin_pos = None
+            self.origin_p_list = None
         super().mouseReleaseEvent(event)
 
 
@@ -423,6 +440,9 @@ class MainWindow(QMainWindow):
         rotate_act.triggered.connect(self.rotate_action)
         scale_act.triggered.connect(self.scale_action)
 
+        clip_cohen_sutherland_act.triggered.connect(self.clip_cohen_sutherland_action)
+        clip_liang_barsky_act.triggered.connect(self.clip_liang_barsky_action)
+
         self.list_widget.currentTextChanged.connect(self.canvas_widget.selection_changed)
 
         # 设置主窗口的布局
@@ -553,6 +573,14 @@ class MainWindow(QMainWindow):
     def scale_action(self):
         self.canvas_widget.start_scale()
         self.statusBar().showMessage('缩放')
+
+    def clip_cohen_sutherland_action(self):
+        self.canvas_widget.start_clip('Cohen-Sutherland')
+        self.statusBar().showMessage('Cohen-Sutherland裁剪')
+
+    def clip_liang_barsky_action(self):
+        self.canvas_widget.start_clip('Liang-Barsky')
+        self.statusBar().showMessage('Liang-Barsky裁剪')
 
 
 if __name__ == '__main__':
