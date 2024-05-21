@@ -35,7 +35,7 @@ if __name__ == '__main__':
                     if item_type == 'line':
                         pixels = alg.draw_line(p_list, algorithm)
                         for x, y in pixels:
-                            canvas[height - 1 - y, x] = color  # 根据Pillow版本而定，最终输出的视觉结果需要以画布左上角为坐标原点
+                            canvas[y, x] = color  # 根据Pillow版本而定，最终输出的视觉结果需要以画布左上角为坐标原点
                     elif item_type == 'polygon':
                         pixels = alg.draw_polygon(p_list, algorithm)
                         for x, y in pixels:
@@ -96,7 +96,7 @@ if __name__ == '__main__':
                 item_id = line[1]
                 x = int(line[2])
                 y = int(line[3])
-                r = int (line[4])
+                r = int(line[4])
                 item_type = item_dict[item_id][0]
                 pointSet = item_dict[item_id][1]
                 algorithm = item_dict[item_id][2]

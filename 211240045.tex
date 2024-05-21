@@ -22,7 +22,7 @@
 
 %--
 \begin{document}
-\title{\textbf{《计算机图形学》4月报告}}
+\title{\textbf{《计算机图形学》5月报告}}
 \author{211240045，杨镇源，\href{mailto:211240045@smail.nju.edu.cn}{211240045@smail.nju.edu.cn}}
 \maketitle
 \tableofcontents 
@@ -47,6 +47,10 @@ $\bullet$ 完成绘制多边形（Bresenham算法）
 
 $\bullet$ 完成绘制椭圆（中点圆生成算法）
 
+$\bullet$ 完成绘制曲线（Bezier算法）
+
+$\bullet$ 完成绘制曲线（B-spline算法）
+
 $\bullet$ 完成图元平移
 
 $\bullet$ 完成图元旋转
@@ -54,6 +58,14 @@ $\bullet$ 完成图元旋转
 $\bullet$ 完成图元缩放
 
 $\bullet$ 实现gui设置画笔颜色
+
+\subsection{2024年5月}
+
+$\bullet$ 完成图元（线段）裁减（Cohen-Sutherland算法）
+
+$\bullet$ 完成图元（线段）裁减（Liang-Barsky算法）
+
+$\bullet$ 完成命令行界面（CLI）程序
 
 \section{图元绘制算法介绍}
 
@@ -295,6 +307,130 @@ $\bullet$ MainWindow类中连接槽函数，实现scale\_action函数
 
 在start\_scale函数将当前系统状态调整为scale；在mousePressEvent函数中第一次点击确定缩放中心，第二次点击确定缩放起始位置；在mouseMoveEvent函数中随着鼠标指针移动，计算缩放倍率参数s，调用alg.scale函数更新缩放对象的点集坐标，然后刷新界面。由此，即可实现缩放功能。
 
+\subsection{图元裁剪}
+
+\subsubsection{算法原理——Cohen-Sutherland算法}
+
+编码算法将整个画布分成九个区域，如下图所示：
+
+\begin{center}
+	\includegraphics[width=4in]{figs/1.png}
+\end{center}
+
+根据线段端点所在位置，给每个端点一个四位二进制码（称为区域码）。四位区域码的4位从左到右以此表示为上、下、右、左。区域码的任何位赋值为1代表端点落在相应的区域中，否则为0。
+
+据区域编码规则可知，在确定区域码每位的值时，可通过比较端点坐标值$(x,y)$和裁剪边界来确定区域码各位的值：
+
+如果$x<x_{min}$，表示该点在裁剪窗口左边界的左方，则第1位置1,否则置0；
+
+如果$x>x_{max}$，表示该点在裁剪窗口右边界的右方，则第2位置1,否则置0；
+
+如果$y<y_{min}$，表示该点在裁剪窗口下边界的下方，则第3位置1,否则置0；
+
+如果$y>y_{max}$，表示该点在裁剪窗口上边界的上方，则第4位置1,否则置0。
+
+根据线段和裁剪窗口的关系，可分三种情况进行处理：
+
+线段完全在裁剪窗口之内，两个端点的区域码都为0000，则该线段完全在裁剪窗口内；
+
+线段完全在裁剪窗口之外，两个端点的区域码相与的结果不为0000，则该线段完全在裁剪窗口之外；
+
+其他情况下，显见属于一半落在窗口内一半落在窗口外，线段将被裁剪，需要进行求交运算。首先对线段外端点（落在窗口外的点）与一条裁剪边界比较来确定需要裁剪多少线段；然后，将线段的剩下部分与其他裁剪边界对比，直到该直线完全落在窗口内或者被舍弃。实际算法实现只有在检测到区域码的某位为1时，才把线段和对应裁剪窗口进行求交运算。
+
+\subsubsection{算法原理——Liang-Barsky算法}
+
+Liang-Barsky算法有两个主要思想：用参数方程表示直线；将待裁剪直线看作一有方向的线。
+
+\textbf{用参数方程表示直线}
+
+设待裁剪线段为$P_1P_2$，其中$P_1=(x_1,y_1),P_2=(x_2,y_2)$，用参数$u$表示如下直线：
+
+\begin{center}
+	\includegraphics[width=4in]{figs/2.png}
+\end{center}
+
+\begin{center}
+	$
+	\begin{cases}  
+		x=x_1+u(x_2-x_1) = x_1 + u\Delta x\ \ 0\leq u\leq 1 \\
+		y=y_1+u(y_2-y_1) = y_1 + u\Delta y\ \ 0\leq u\leq 1 
+	\end{cases} 
+	$
+\end{center}
+
+当$u=0$时，$x=x_1,y=y_1$，也就是$P_1$；当$u=1$时，$x=x_2,y=y_2$，也就是$P_2$；当$u=0.5$时，为$P_1P_2$中点。
+
+\textbf{将待裁剪直线看作一有方向的线}
+
+根据$u$的取值，可以确定所需裁剪的线段的多少，那么$u$如何取值？
+
+我们将裁剪窗口的四个边分为入边和出边两类，其中入边是从裁剪窗口之外进入到裁剪窗口之内方向的边，出边是从裁剪窗口之内延伸到裁剪窗口之外的边。待裁剪线段和裁剪窗口必定会有四个交点（包括与裁剪窗口延长线的交点）分别设四个交点分别为$c_1,c_2,c_3,c_4$。设待裁剪直线为$P_1P_2$。则有下图：
+
+\begin{center}
+	\includegraphics[width=4in]{figs/3.png}
+\end{center}
+
+显然裁剪得到的目标线段应该是$c_2$和$P_2$所夹线段，所以$u$的选取需要从$c_2$和$P_2$所对应的$u_1,u_2$入手，有以下关系：
+
+$u_1=max(P_1,c_1,c_2)$，$u_1$是两个入边和$P_1$对应的$u$值的最大值；$u_2=min(P_2,c_3,c_4)$，$u_2$是两个出边和$P_2$对应$u$的最小值；且$u_1<u_2$。
+
+因此问题转化为求出$c_1,c_2,c_3,c_4$所对应的$u$值，同时确定哪两条边是入边，哪两条边是出边。
+
+对于第一个问题，结合上述等式组，考虑裁剪窗口的上边界为$y_{max}$，下边界为$y_{min}$，左边界为$x_{min}$，右边界为$x_{max}$，有：
+
+\begin{center}
+	$
+	\begin{cases}  
+		x_{min}\leq x_1 + u\Delta x\leq x_{max} \\
+		y_{min}\leq y_1 + u\Delta y\leq y_{max}
+	\end{cases} 
+	$
+\end{center}
+
+于是当以下等式中某一条满足时，$u$所对应的值为裁剪直线和四个边界直线的交点。
+
+\begin{center}
+	$
+	\begin{cases}  
+		x_1 + u\Delta x = x_{min}	\\
+		x_1 + u\Delta x = x_{max}	\\
+		y_1 + y\Delta y = y_{min}	\\
+		y_1 + u\Delta y = y_{max}
+	\end{cases} 
+	$
+\end{center}
+
+对于第二个问题，考虑上述不等式的一般情况：
+
+\begin{center}
+	$
+	\begin{cases}  
+		u(-\Delta x)\leq x_1 - x_{min}	\\
+		u\Delta x\leq x_{max} - x_1	\\
+		u(-\Delta y)\leq y_1-y_{min}	\\
+		u\Delta y\leq y_{max} - y_1
+	\end{cases} 
+	$
+\end{center}
+
+可归纳为$up_k\leq q_k,k\in \{1,2,3,4\}$，当$p_k<0$时，线段从裁剪边界延长线的外部延伸到内部，即对应入边；当$p_k>0$时，线段从裁剪边界延长线的内部延伸到外部，即对应出边。同时当$p_k=0$时，若$q_k<0$，则线段完全在边界外；若$q_k>0$，则线段完全在边界内。
+
+\subsubsection{算法实现}
+
+需要实现或改动的函数有：
+
+$\bullet$ start\_clip函数
+
+$\bullet$ mousePressEvent函数
+
+$\bullet$ mouseMoveEvent函数
+
+$\bullet$ mouseReleaseEvent函数
+
+$\bullet$ MainWindow类中连接槽函数，实现clip\_action函数
+
+在start\_clip函数将当前系统状态调整为clip；在mousePressEvent函数中第一次点击确定裁剪窗口对角线的起始位置；在mouseMoveEvent函数中随着鼠标指针移动，实时更新裁剪窗口对角线另一端点的位置，然后调用alg.clip函数更新待裁剪线段的端点坐标，然后刷新界面。由此，即可实现裁剪功能。
+
 \section{用户交互功能介绍}
 
 \subsection{gui重置画布}
@@ -342,6 +478,12 @@ $\bullet$将颜色值存入画布的temp\_color成员中
 	\includegraphics[width=6in]{figs/color1.png}
 	\includegraphics[width=6in]{figs/color2.png}
 \end{center}
+
+\subsection{cli命令行界面}
+
+使用readline()方法读取指令文件中的命令，使用line.strip().split(' ')拆分传入的参数。对于绘图指令，需要将传入的关键参数保存；对于图元变换指令，需要调用算法库（cg\_algorithms.py）中的对应图元变换函数生成新的点坐标集（pointSet），并存入item\_dict；对于保存指令，需要根据图元类型调用算法库（cg\_algorithms.py）中的对应图元绘制函数生成待绘制点集（pixels），然后保存为.bmp文件。
+
+值得注意的是，在实验手册中规定绘制坐标系的坐标原点在屏幕左上方（往右为x正方向，往下为y正方向），因此将模板程序中的canvas[height - 1 - y, x]修改为canvas[y, x]。
 
 \section{总结}
 \dots
