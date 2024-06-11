@@ -22,7 +22,7 @@
 
 %--
 \begin{document}
-\title{\textbf{《计算机图形学》5月报告}}
+\title{\textbf{《计算机图形学》课程大作业实验报告}}
 \author{211240045，杨镇源，\href{mailto:211240045@smail.nju.edu.cn}{211240045@smail.nju.edu.cn}}
 \maketitle
 \tableofcontents 
@@ -66,6 +66,14 @@ $\bullet$ 完成图元（线段）裁减（Cohen-Sutherland算法）
 $\bullet$ 完成图元（线段）裁减（Liang-Barsky算法）
 
 $\bullet$ 完成命令行界面（CLI）程序
+
+\subsection{2024年6月}
+
+$\bullet$ 完成系统报告
+
+$\bullet$ 完成系统使用说明书
+
+$\bullet$ 录制系统演示视频
 
 \section{图元绘制算法介绍}
 
@@ -151,7 +159,7 @@ B样条曲线的基函数产生使用递推形式，即de-BoorCox递推定义：
 针对实验要求使用均匀B样条函数的情况，为了优化性能，我们可以选择一个简化的节点向量，即仅包含从$0$到$n+k$的连续整数序列。在实际的编程实现中，代码可以按照如下形式编写：
 
 \begin{center}
-	\includegraphics[width=6in]{figs/algorithm1.png}
+	\includegraphics[width=6in]{报告/algorithm1.png}
 \end{center}
 
 \subsubsection{方法对比}
@@ -314,7 +322,7 @@ $\bullet$ MainWindow类中连接槽函数，实现scale\_action函数
 编码算法将整个画布分成九个区域，如下图所示：
 
 \begin{center}
-	\includegraphics[width=4in]{figs/1.png}
+	\includegraphics[width=4in]{报告/1.png}
 \end{center}
 
 根据线段端点所在位置，给每个端点一个四位二进制码（称为区域码）。四位区域码的4位从左到右以此表示为上、下、右、左。区域码的任何位赋值为1代表端点落在相应的区域中，否则为0。
@@ -346,7 +354,7 @@ Liang-Barsky算法有两个主要思想：用参数方程表示直线；将待�
 设待裁剪线段为$P_1P_2$，其中$P_1=(x_1,y_1),P_2=(x_2,y_2)$，用参数$u$表示如下直线：
 
 \begin{center}
-	\includegraphics[width=4in]{figs/2.png}
+	\includegraphics[width=4in]{报告/2.png}
 \end{center}
 
 \begin{center}
@@ -367,7 +375,7 @@ Liang-Barsky算法有两个主要思想：用参数方程表示直线；将待�
 我们将裁剪窗口的四个边分为入边和出边两类，其中入边是从裁剪窗口之外进入到裁剪窗口之内方向的边，出边是从裁剪窗口之内延伸到裁剪窗口之外的边。待裁剪线段和裁剪窗口必定会有四个交点（包括与裁剪窗口延长线的交点）分别设四个交点分别为$c_1,c_2,c_3,c_4$。设待裁剪直线为$P_1P_2$。则有下图：
 
 \begin{center}
-	\includegraphics[width=4in]{figs/3.png}
+	\includegraphics[width=4in]{报告/3.png}
 \end{center}
 
 显然裁剪得到的目标线段应该是$c_2$和$P_2$所夹线段，所以$u$的选取需要从$c_2$和$P_2$所对应的$u_1,u_2$入手，有以下关系：
@@ -456,8 +464,8 @@ $\bullet$ 使用Pixmap对象，存储绘制的图像内容
 \subsubsection{实现效果}
 
 \begin{center}
-	\includegraphics[width=6in]{figs/save.png}
-	\includegraphics[width=6in]{figs/save_res.png}
+	\includegraphics[width=6in]{报告/save.png}
+	\includegraphics[width=6in]{报告/save_res.png}
 \end{center}
 
 \subsection{gui设置画笔颜色}
@@ -475,8 +483,8 @@ $\bullet$将颜色值存入画布的temp\_color成员中
 \subsubsection{实现效果}
 
 \begin{center}
-	\includegraphics[width=6in]{figs/color1.png}
-	\includegraphics[width=6in]{figs/color2.png}
+	\includegraphics[width=6in]{报告/color1.png}
+	\includegraphics[width=6in]{报告/color2.png}
 \end{center}
 
 \subsection{cli命令行界面}
@@ -486,10 +494,9 @@ $\bullet$将颜色值存入画布的temp\_color成员中
 值得注意的是，在实验手册中规定绘制坐标系的坐标原点在屏幕左上方（往右为x正方向，往下为y正方向），因此将模板程序中的canvas[height - 1 - y, x]修改为canvas[y, x]。
 
 \section{总结}
-\dots
+本次《计算机图形学》课程实验历时三个月，在这段时间我使用python语言实现了课程中讲授的各种图形学算法，并结合PyQt5库，最终完成了一个具有图形界面的完整的图形学系统。
 
-\bibliographystyle{plain}%
-%"xxx" should be your citing file's name.
-\bibliography{xxx}
+在完成课程实验的过程中，我加深了对DDA、Bresenham、Cohen-Sutherland、Liang-Barsky等图形绘制算法的理解，同时对《计算机图形学》这门课程的应用场景有了更加深刻的认识。当然这个过程不是一帆风顺的，我在将图形学的理论（公式）用python代码实现时经常会遇到一些奇怪的bug，比如浮点数整数未转换、除0错等。上述问题经过不断调试和优化代码都得到了解决，并且我逐渐掌握了解决图形学程序中疑难问题的能力，同时我的代码工程能力也得到了增强。
 
+通过这这次大作业，我不仅加深了对计算机图形学基础知识的理解，还提升了自己的编程技能和创造力。这段经历让我更加热爱图形学领域，同时也为将来的学习和工作打下了坚实的基础。
 \end{document}
