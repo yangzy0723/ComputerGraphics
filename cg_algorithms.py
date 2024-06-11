@@ -321,7 +321,7 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
             code0 = sum([1 * (x0 < x_min), 2 * (x0 > x_max), 4 * (y0 < y_min), 8 * (y0 > y_max)])
             code1 = sum([1 * (x1 < x_min), 2 * (x1 > x_max), 4 * (y1 < y_min), 8 * (y1 > y_max)])
             if (code0 | code1) == 0:
-                result = [[x0, y0], [x1, y1]]
+                result = [[int(x0), int(y0)], [int(x1), int(y1)]]
                 break
             elif (code0 & code1) != 0:
                 result.extend([[0, 0], [0, 0]])
