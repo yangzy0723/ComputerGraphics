@@ -1,14 +1,20 @@
-\documentclass{article}
-% Set page size and margins
-% Replace `letterpaper' with `a4paper' for UK/EU standard size
-\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
-
-% Useful packages
-\usepackage{indentfirst}	%用于开头空两格
-\usepackage{amsmath}
+\documentclass[a4paper,UTF8]{article}
+\usepackage{ctex}
+\usepackage[margin=1.25in]{geometry}
+\usepackage{color}
 \usepackage{graphicx}
-\usepackage{xeCJK}
-
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+%\usepackage[thmmarks, amsmath, thref]{ntheorem}
+\theoremstyle{definition}
+\newtheorem*{solution}{Solution}
+\newtheorem*{prove}{Proof}
+\usepackage{multirow}
+\usepackage{url}
+% 设置linkcolor为黑色，urlcolor为蓝色
+\usepackage[colorlinks,linkcolor=black,urlcolor=blue]{hyperref}
+\usepackage{enumerate}
 \title{\textbf{系统使用说明书}}
 \author{杨镇源，211240045，211240045@smail.nju.edu.cn}
 
@@ -16,34 +22,36 @@
 	\maketitle
 	\tableofcontents 
 	\newpage
+	
 	\section{开发环境}
-	\subsection{所使用的操作系统}
-	Ubuntu 22.04.4 LTS
 	
-	\subsection{所使用IDE的版本}
-	PyCharm 2023.3
+		\subsection{所使用的操作系统}
+		Ubuntu 22.04.4 LTS
 	
-	\subsection{python的版本}
-	Python 3.10
+		\subsection{所使用IDE的版本}
+		PyCharm 2023.3
 	
-	\subsection{python库的版本}
-	PyQt5 5.15.10
+		\subsection{python的版本}
+		Python 3.10
 	
-	PyQt5-Qt5 5.15.2
+		\subsection{python库的版本}
+		PyQt5 5.15.10
 	
-	PyQt5-sip 12.13.0
+		PyQt5-Qt5 5.15.2
 	
-	PyQt5-stubs 5.15.6.0
+		PyQt5-sip 12.13.0
 	
-	numpy 1.26.4
+		PyQt5-stubs 5.15.6.0
 	
-	pillow 10.2.0
+		numpy 1.26.4
 	
-	pip 24.0
+		pillow 10.2.0
 	
-	setuptools 69.1.1
+		pip 24.0
 	
-	wheel 0.42.0
+		setuptools 69.1.1
+	
+		wheel 0.42.0
 	
 	\section{功能介绍}
 		\subsection{文件功能}
